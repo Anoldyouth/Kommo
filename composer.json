@@ -51,7 +51,8 @@
         "mezzio/mezzio": "^3.7",
         "mezzio/mezzio-helpers": "^5.7",
         "laminas/laminas-servicemanager": "^3.4",
-        "mezzio/mezzio-fastroute": "^3.0.3"
+        "mezzio/mezzio-fastroute": "^3.0.3",
+        "squizlabs/php_codesniffer": "^3.5.5"
     },
     "require-dev": {
         "laminas/laminas-development-mode": "^3.3.0",

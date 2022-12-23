@@ -1,0 +1,29 @@
+version: '3.5'
+
+# приближенный к продакшену конфиг
+services:
+  # PHP fpm
+  application-backend:
+    build: .
+    restart: always
+    tty: true
+    working_dir: /var/www/application
+    volumes:
+      - .:/var/www/application
+    container_name: application-backend
+
+  # Nginx Service
+  application-nginx:
+    image: nginx:alpine
+    container_name: application-nginx
+    restart: always
+    tty: true
+    environment:
+      - "APPLICATION_UPSTREAM=application-backend:9000"
+    volumes:
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./docker/nginx/templates/:/etc/nginx/templates/
+      - ./public/:/var/www/application/public/
+    ports:
+      - "80:80"
+      - "443:443"
