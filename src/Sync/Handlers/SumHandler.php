@@ -13,14 +13,14 @@ class SumHandler implements RequestHandlerInterface
 {
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        if (count($_GET) != 2) {
+        if (count($request->getQueryParams()) != 2) {
             return new JsonResponse([
                 'status' => 'Need 2 number'
             ]);
         }
         return new JsonResponse([
             'status' => 'ok',
-            'answer' => array_sum($_GET)
+            'answer' => array_sum($request->getQueryParams())
         ]);
     }
 }
