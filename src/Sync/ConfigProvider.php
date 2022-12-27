@@ -20,6 +20,7 @@ class ConfigProvider
             ],
             'factories' => [
                 \Sync\Handlers\TestHandler::class => \Sync\Factories\TestHandlerFactory::class,
+                \Sync\Handlers\SumHandler::class => \Sync\Factories\SumHandlerFactory::class,
             ],
         ];
     }
