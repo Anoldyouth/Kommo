@@ -4,3 +4,6 @@
 /coveralls-upload.json
 /phpunit.xml
 /vendor/
+/logs/
+/tokens.json
+/.idea
