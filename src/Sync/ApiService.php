@@ -21,8 +21,6 @@ use Sync\Exceptions\Base\RandomnessException;
 use Sync\Exceptions\BaseSyncExceptions;
 use Sync\Exceptions\Unisender\InvalidTokenException;
 
-require '.\config\ApiClientConfig.php';
-
 class ApiService
 {
     /** @var string Базовый домен авторизации. */
@@ -162,6 +160,12 @@ class ApiService
         );
     }
 
+    /**
+     * Получение контактов (имени и рабочих почт).
+     *
+     * @param string $accountName
+     * @return array
+     */
     public function getUserContacts(string $accountName): array
     {
         try {
