@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Sync;
 
 use Sync\Factories\ApiHandlerFactory;
+use Sync\Factories\ContactsHandlerFactory;
 use Sync\Factories\SumHandlerFactory;
 use Sync\Factories\TestHandlerFactory;
 use Sync\Handlers\ApiHandler;
+use Sync\Handlers\ContactsHandler;
 use Sync\Handlers\SumHandler;
 use Sync\Handlers\TestHandler;
 
@@ -29,6 +31,7 @@ class ConfigProvider
                 TestHandler::class => TestHandlerFactory::class,
                 SumHandler::class => SumHandlerFactory::class,
                 ApiHandler::class => ApiHandlerFactory::class,
+                ContactsHandler::class => ContactsHandlerFactory::class,
             ],
         ];
     }
