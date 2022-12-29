@@ -175,7 +175,6 @@ class ApiService
                 $this->apiClient->setAccessToken($accessToken);
                 $this->apiClient->setAccountBaseDomain($accessToken->getValues()['base_domain']);
                 $contacts = $this->apiClient->contacts()->get();
-
                 // Проходимся по контактам, собираем имена и рабочие почты
                 $result = [];
                 foreach ($contacts as $contact) {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "edf3a4e9bf3500de9bb49376c305ff31",
+    "content-hash": "2cc9c185fc99447735172f6384367a24",
     "packages": [
         {
             "name": "amocrm/amocrm-api-library",
@@ -3470,6 +3470,58 @@
                 }
             ],
             "time": "2022-06-27T16:58:25+00:00"
+        },
+        {
+            "name": "unisender/api-wrapper",
+            "version": "v1.6.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/unisender-dev/php-api-wrapper.git",
+                "reference": "2c0a932cf95829b4e943a2a248038f119491a15f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/unisender-dev/php-api-wrapper/zipball/2c0a932cf95829b4e943a2a248038f119491a15f",
+                "reference": "2c0a932cf95829b4e943a2a248038f119491a15f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-iconv": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-openssl": "*",
+                "php": ">=5.6.0"
+            },
+            "suggest": {
+                "ext-bz2": "Allows bzip2 compression"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Unisender\\ApiWrapper\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Unisender developers",
+                    "email": "devs@unisender.com"
+                }
+            ],
+            "description": "Unisender API wrapper",
+            "keywords": [
+                "api",
+                "extension",
+                "unisender"
+            ],
+            "support": {
+                "issues": "https://github.com/unisender-dev/php-api-wrapper/issues",
+                "source": "https://github.com/unisender-dev/php-api-wrapper/tree/v1.6.5"
+            },
+            "time": "2020-10-16T13:56:12+00:00"
         },
         {
             "name": "webimpress/safe-writer",
