@@ -43,5 +43,5 @@ return static function (Application $app, MiddlewareFactory $factory, ContainerI
     $app->route('/auth', Sync\Handlers\ApiHandler::class, ['GET', 'POST'], 'auth');
     $app->route('/contacts', Sync\Handlers\ContactsHandler::class, ['GET', 'POST'], 'contacts');
     $app->get('/contact', Sync\Handlers\ContactHandler::class, 'contact');
-    $app->get('/sync', Sync\Handlers\UnisenderHandler::class, 'sync');
+    $app->get('/sync', Sync\Handlers\SyncHandler::class, 'sync');
 };
