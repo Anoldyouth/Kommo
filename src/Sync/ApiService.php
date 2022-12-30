@@ -32,7 +32,7 @@ class ApiService
     /** @var AmoCRMApiClient AmoCRM клиент. */
     private AmoCRMApiClient $apiClient;
 
-    public function __construct($clientId, $clientSecret, $redirectUri)
+    public function __construct()
     {
         $client = include '.\config\ApiClientConfig.php';
         $this->apiClient = new AmoCRMApiClient($client['clientId'], $client['clientSecret'], $client['redirectUri']);
