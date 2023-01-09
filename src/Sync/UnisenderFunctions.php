@@ -3,7 +3,6 @@
 namespace Sync;
 
 use Hopex\Simplog\Logger;
-use PHPUnit\Util\Exception;
 use Sync\Exceptions\BaseSyncExceptions;
 use Sync\Exceptions\Unisender\AccessDeniedException;
 use Sync\Exceptions\Unisender\InvalidArgException;
@@ -15,6 +14,7 @@ use Unisender\ApiWrapper\UnisenderApi;
 
 class UnisenderFunctions
 {
+    /** @var string ключ Unisender. */
     private string $key;
 
     public function __construct()
@@ -22,16 +22,33 @@ class UnisenderFunctions
         $this->key = include './config/UnisenderConfig.php';
     }
 
+    /**
+     * Получение от Unisender данных о почте, переданной в функцию.
+     *
+     * @param string $email
+     * @return array
+     */
     public function getContact(string $email): array
     {
         $unisenderApi = new UnisenderApi($this->key);
         return $this->checkingAnswer(json_decode($unisenderApi->getContact(['email' => $email]), true))['result'];
     }
 
+    /**
+     * Метод, используемый для ручной синхронизации.
+     * При необходимости, создает новый лист в аккаунте Unisender,
+     * а затем копирует все контакты из Kommo в Unisender.
+     *
+     * @param string $accountName
+     * @return array
+     */
     public function manualSync(string $accountName): array
     {
+        // Получение контактов AmoCRM
         $contacts = (new ApiService())->getUserContacts($accountName);
         $unisenderApi = new UnisenderApi($this->key);
+
+        // Проверка существования листа
         $lists = $this->checkingAnswer(json_decode($unisenderApi->getLists(), true))['result'];
         foreach ($lists as $list) {
             if ($list['title'] == 'Контакты Kommo') {
@@ -39,13 +56,18 @@ class UnisenderFunctions
                 break;
             }
         }
+
+        //Если лист с таким именем не найден, то создаем новый
         if (!isset($emailListIds)) {
             $emailListIds = $this->checkingAnswer(
                 json_decode($unisenderApi->createList(['title' => 'Контакты Kommo']), true)
             )['result']['id'];
         }
+
+        // Создаем посылку для Unisender
         $fieldNames = ['email', 'Name', 'email_list_ids'];
         $data = [];
+        // TODO: группировать отправки по 500 контактов
         foreach ($contacts as $contact) {
             if (isset($contact['emails'])) {
                 foreach ($contact['emails'] as $email) {
@@ -60,6 +82,8 @@ class UnisenderFunctions
             ]),
             true
         ))['result'];
+
+        // Обработка предупреждений от Unisender
         $logs = $result['log'];
         $result['log'] = [];
         $logWarnings = [
@@ -76,6 +100,7 @@ class UnisenderFunctions
             ->setLevel('other')
             ->setDirectoryPermissions(0775)
             ->warning($logWarnings);
+
         return $result;
     }
 
