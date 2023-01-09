@@ -17,6 +17,7 @@ use Psr\Http\Message\ResponseInterface;
 use Sync\Exceptions\AmoCRM\ApiException;
 use Sync\Exceptions\AmoCRM\AuthApiException;
 use Sync\Exceptions\AmoCRM\CreatingButtonException;
+use Sync\Exceptions\AmoCRM\EmptyAmoCRMTokenException;
 use Sync\Exceptions\AmoCRM\InvalidAmoCRMTokenException;
 use Sync\Exceptions\Base\RandomnessException;
 use Sync\Exceptions\BaseSyncExceptions;
@@ -151,13 +152,15 @@ class ApiService
      * Получение токена из файла по имени.
      *
      * @param string $accountName
-     * @return AccessToken
+     * @return AccessToken|null
      */
-    public function readToken(string $accountName): AccessToken
+    public function readToken(string $accountName): ?AccessToken
     {
-        return new AccessToken(
-            json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName]
-        );
+        $data = json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName];
+        if (empty($data)) {
+            return null;
+        }
+        return new AccessToken($data);
     }
 
     /**
@@ -169,9 +172,12 @@ class ApiService
     public function getUserContacts(string $accountName): array
     {
         try {
+            // Получаем токен с файла и закрепляем его
+            $accessToken = $this->readToken($accountName);
+            if (empty($accessToken)) {
+                throw new EmptyAmoCRMTokenException(new \Exception());
+            }
             try {
-                // Получаем токен с файла и закрепляем его
-                $accessToken = $this->readToken($accountName);
                 $this->apiClient->setAccessToken($accessToken);
                 $this->apiClient->setAccountBaseDomain($accessToken->getValues()['base_domain']);
                 $contacts = $this->apiClient->contacts()->get();
