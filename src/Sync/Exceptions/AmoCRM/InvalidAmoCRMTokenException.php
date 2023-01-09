@@ -1,10 +1,10 @@
 <?php
 
-namespace Sync\Exceptions\Unisender;
+namespace Sync\Exceptions\AmoCRM;
 
 use Sync\Exceptions\BaseSyncExceptions;
 
-class InvalidTokenException extends BaseSyncExceptions
+class InvalidAmoCRMTokenException extends BaseSyncExceptions
 {
     protected $message = 'Невалидный токен авторизации amoCRM.';
 }

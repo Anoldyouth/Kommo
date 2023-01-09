@@ -11,6 +11,11 @@ FROM base
 # https://docs.docker.com/engine/reference/builder/#copy
 COPY . ${WORK_DIR}
 
+# Устанавливаем права на папку приложения
+USER 0
+RUN chmod -R 775 /var/www/application
+USER $CONTAINER_USER_ID
+
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
 CMD ["php-fpm"]

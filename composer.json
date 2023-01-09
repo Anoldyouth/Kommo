@@ -45,7 +45,7 @@
         "php": "^7.4 || ~8.0.0 || ~8.1.0",
         "amocrm/amocrm-api-library": "^0.12.4",
         "composer/package-versions-deprecated": "^1.10.99",
-        "hopex/simplog": "^2.1",
+        "hopex/simplog": "^2.2",
         "laminas/laminas-component-installer": "^2.6",
         "laminas/laminas-config-aggregator": "^1.6",
         "laminas/laminas-diactoros": "^2.7",

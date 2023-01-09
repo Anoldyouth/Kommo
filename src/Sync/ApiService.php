@@ -17,9 +17,9 @@ use Psr\Http\Message\ResponseInterface;
 use Sync\Exceptions\AmoCRM\ApiException;
 use Sync\Exceptions\AmoCRM\AuthApiException;
 use Sync\Exceptions\AmoCRM\CreatingButtonException;
+use Sync\Exceptions\AmoCRM\InvalidAmoCRMTokenException;
 use Sync\Exceptions\Base\RandomnessException;
 use Sync\Exceptions\BaseSyncExceptions;
-use Sync\Exceptions\Unisender\InvalidTokenException;
 
 class ApiService
 {
@@ -34,7 +34,7 @@ class ApiService
 
     public function __construct()
     {
-        $client = include '.\config\ApiClientConfig.php';
+        $client = include './config/ApiClientConfig.php';
         $this->apiClient = new AmoCRMApiClient($client['clientId'], $client['clientSecret'], $client['redirectUri']);
     }
 
@@ -201,7 +201,7 @@ class ApiService
                 }
                 return $result;
             } catch (AmoCRMMissedTokenException $ex) {
-                throw new InvalidTokenException($ex);
+                throw new InvalidAmoCRMTokenException($ex);
             } catch (AmoCRMoAuthApiException $ex) {
                 throw new AuthApiException($ex);
             } catch (AmoCRMApiException $ex) {
