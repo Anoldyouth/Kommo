@@ -32,7 +32,7 @@ class ApiService
     /** @var AmoCRMApiClient AmoCRM клиент. */
     private AmoCRMApiClient $apiClient;
 
-    public function __construct($clientId, $clientSecret, $redirectUri)
+    public function __construct()
     {
         $client = include '.\config\ApiClientConfig.php';
         $this->apiClient = new AmoCRMApiClient($client['clientId'], $client['clientSecret'], $client['redirectUri']);
@@ -175,7 +175,6 @@ class ApiService
                 $this->apiClient->setAccessToken($accessToken);
                 $this->apiClient->setAccountBaseDomain($accessToken->getValues()['base_domain']);
                 $contacts = $this->apiClient->contacts()->get();
-
                 // Проходимся по контактам, собираем имена и рабочие почты
                 $result = [];
                 foreach ($contacts as $contact) {
