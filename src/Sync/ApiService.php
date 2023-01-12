@@ -10,16 +10,17 @@ use AmoCRM\Exceptions\BadTypeException;
 use AmoCRM\Models\ContactModel;
 use AmoCRM\Models\CustomFieldsValues\CategoryCustomFieldValuesModel;
 use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
-use Laminas\Diactoros\Response\JsonResponse;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use League\OAuth2\Client\Token\AccessToken;
 use Exception;
-use Psr\Http\Message\ResponseInterface;
 use Sync\Exceptions\AmoCRM\ApiException;
 use Sync\Exceptions\AmoCRM\AuthApiException;
 use Sync\Exceptions\AmoCRM\CreatingButtonException;
 use Sync\Exceptions\AmoCRM\InvalidAmoCRMTokenException;
 use Sync\Exceptions\Base\RandomnessException;
 use Sync\Exceptions\BaseSyncExceptions;
+use Sync\Models\Account;
+use Sync\Models\Accounts;
 
 class ApiService
 {
@@ -140,24 +141,32 @@ class ApiService
      */
     private function saveToken(array $token): void
     {
-        $tokens = file_exists(self::TOKENS_FILE)
-            ? json_decode(file_get_contents(self::TOKENS_FILE), true)
-            : [];
-        $tokens[$_SESSION['name']] = $token;
-        file_put_contents(self::TOKENS_FILE, json_encode($tokens, JSON_PRETTY_PRINT));
+        $capsule = (new DatabaseConfiguration())->getConnection();
+        Account::updateOrCreate(
+            ['account_name' => $_SESSION['name'],],
+            ['access_token' => json_encode($token, JSON_PRETTY_PRINT)]
+        );
+//        $tokens = file_exists(self::TOKENS_FILE)
+//            ? json_decode(file_get_contents(self::TOKENS_FILE), true)
+//            : [];
+//        $tokens[$_SESSION['name']] = $token;
+//        file_put_contents(self::TOKENS_FILE, json_encode($tokens, JSON_PRETTY_PRINT));
     }
 
     /**
      * Получение токена из файла по имени.
      *
      * @param string $accountName
+     * @throws ModelNotFoundException
      * @return AccessToken
      */
     public function readToken(string $accountName): AccessToken
     {
-        return new AccessToken(
-            json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName]
-        );
+        $capsule = (new DatabaseConfiguration())->getConnection();
+        return new AccessToken(Account::where('account_name', '=', $accountName)->firstOrFail()->accessToken);
+//        return new AccessToken(
+//            json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName]
+//        );
     }
 
     /**

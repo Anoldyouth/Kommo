@@ -7,3 +7,5 @@
 /logs/
 /tokens.json
 /.idea
+/.env
+
