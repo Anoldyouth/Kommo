@@ -163,7 +163,9 @@ class ApiService
     public function readToken(string $accountName): AccessToken
     {
         $capsule = (new DatabaseConfiguration())->getConnection();
-        return new AccessToken(Account::where('account_name', '=', $accountName)->firstOrFail()->accessToken);
+        return new AccessToken(
+            json_decode(Account::where('account_name', '=', $accountName)->firstOrFail()->access_token, true)
+        );
 //        return new AccessToken(
 //            json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName]
 //        );
@@ -191,13 +193,15 @@ class ApiService
                     if ($contact->getName() !== null) {
                         $emails = [];
                         $fields = $contact->getCustomFieldsValues();
-                        foreach ($fields as $field) {
-                            /** @var CategoryCustomFieldValuesModel $field */
-                            if ($field->getFieldName() == 'Email') {
-                                foreach ($field->getValues() as $value) {
-                                    /** @var MultitextCustomFieldValueModel $value */
-                                    if ($value->getEnum() == 'WORK') {
-                                        $emails[] = $value->getValue();
+                        if (isset($fields)) {
+                            foreach ($fields as $field) {
+                                /** @var CategoryCustomFieldValuesModel $field */
+                                if ($field->getFieldName() == 'Email') {
+                                    foreach ($field->getValues() as $value) {
+                                        /** @var MultitextCustomFieldValueModel $value */
+                                        if ($value->getEnum() == 'WORK') {
+                                            $emails[] = $value->getValue();
+                                        }
                                     }
                                 }
                             }
