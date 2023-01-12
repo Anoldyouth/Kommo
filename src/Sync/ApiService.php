@@ -16,6 +16,7 @@ use Exception;
 use Sync\Exceptions\AmoCRM\ApiException;
 use Sync\Exceptions\AmoCRM\AuthApiException;
 use Sync\Exceptions\AmoCRM\CreatingButtonException;
+use Sync\Exceptions\AmoCRM\EmptyAmoCRMTokenException;
 use Sync\Exceptions\AmoCRM\InvalidAmoCRMTokenException;
 use Sync\Exceptions\Base\RandomnessException;
 use Sync\Exceptions\BaseSyncExceptions;
@@ -160,7 +161,7 @@ class ApiService
      * @throws ModelNotFoundException
      * @return AccessToken
      */
-    public function readToken(string $accountName): AccessToken
+    public function readToken(string $accountName): ?AccessToken
     {
         $capsule = (new DatabaseConfiguration())->getConnection();
         return new AccessToken(
@@ -180,9 +181,12 @@ class ApiService
     public function getUserContacts(string $accountName): array
     {
         try {
+            // Получаем токен с файла и закрепляем его
+            $accessToken = $this->readToken($accountName);
+            if (empty($accessToken)) {
+                throw new EmptyAmoCRMTokenException(new \Exception());
+            }
             try {
-                // Получаем токен с файла и закрепляем его
-                $accessToken = $this->readToken($accountName);
                 $this->apiClient->setAccessToken($accessToken);
                 $this->apiClient->setAccountBaseDomain($accessToken->getValues()['base_domain']);
                 $contacts = $this->apiClient->contacts()->get();
