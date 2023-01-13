@@ -14,7 +14,7 @@ class Accounts extends Migration
         Capsule::schema()->create('accounts', function (Blueprint $table) {
             $table->id();
             $table->string('account_name');
-            $table->string('access_token', 1900);
+            $table->json('access_token');
             $table->timestamps();
         });
     }

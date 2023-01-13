@@ -10,12 +10,14 @@ use Sync\Factories\ContactsHandlerFactory;
 use Sync\Factories\SumHandlerFactory;
 use Sync\Factories\SyncHandlerFactory;
 use Sync\Factories\TestHandlerFactory;
+use Sync\Factories\WidgetHandlerFactory;
 use Sync\Handlers\ApiHandler;
 use Sync\Handlers\ContactHandler;
 use Sync\Handlers\ContactsHandler;
 use Sync\Handlers\SumHandler;
 use Sync\Handlers\SyncHandler;
 use Sync\Handlers\TestHandler;
+use Sync\Handlers\WidgetHandler;
 
 class ConfigProvider
 {
@@ -38,6 +40,7 @@ class ConfigProvider
                 ContactsHandler::class => ContactsHandlerFactory::class,
                 ContactHandler::class => ContactHandlerFactory::class,
                 SyncHandler::class => SyncHandlerFactory::class,
+                WidgetHandler::class => WidgetHandlerFactory::class,
             ],
         ];
     }

@@ -46,6 +46,7 @@
         "amocrm/amocrm-api-library": "^0.12.4",
         "composer/package-versions-deprecated": "^1.10.99",
         "davedevelopment/phpmig": "^1.7",
+        "doctrine/dbal": "^3.5",
         "hopex/simplog": "^2.2",
         "illuminate/database": "^8.83",
         "laminas/laminas-component-installer": "^2.6",
