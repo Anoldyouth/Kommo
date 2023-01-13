@@ -256,7 +256,6 @@ class ApiService
             try {
                 (new DatabaseConfiguration())->getConnection();
                 $account = Account::where('account_name', '=', $widgetData['Uname'])->firstOrFail();
-                file_put_contents('./test.txt', $account);
                 $id = UnisenderToken::firstOrCreate(['token' => $widgetData['token']])->id;
                 $account->unisender_token_id = $id;
                 $account->save();
