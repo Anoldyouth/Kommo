@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'clientId' => '8453f459-3f85-4fb5-bc9a-ec834c3d7026',
-    'clientSecret' => 'T38ivnezlEb8ndWuu7S7PZYuBohMtI5MzgDY5u5AquDtdcFoY76zV7RPFmIILlT3',
-    'redirectUri' => 'https://f90c-173-233-147-68.eu.ngrok.io/auth',
+    'clientId' => '4e976769-e133-4c77-8fa3-78e5a52ec931',
+    'clientSecret' => 'sBaPYA2urtHLh410DlO5srSFenHaGLK43tfy97GhVzukN15WCUtBfYFokjW61Sod',
+    'redirectUri' => 'https://f6d2-212-46-197-210.eu.ngrok.io/auth',
 ];

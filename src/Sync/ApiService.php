@@ -20,8 +20,9 @@ use Sync\Exceptions\AmoCRM\EmptyAmoCRMTokenException;
 use Sync\Exceptions\AmoCRM\InvalidAmoCRMTokenException;
 use Sync\Exceptions\Base\RandomnessException;
 use Sync\Exceptions\BaseSyncExceptions;
+use Sync\Exceptions\Database\DBModelNotFoundException;
 use Sync\Models\Account;
-use Sync\Models\Accounts;
+use Sync\Models\UnisenderToken;
 
 class ApiService
 {
@@ -37,7 +38,11 @@ class ApiService
     public function __construct()
     {
         $client = include './config/ApiClientConfig.php';
-        $this->apiClient = new AmoCRMApiClient($client['clientId'], $client['clientSecret'], $client['redirectUri']);
+        $this->apiClient = new AmoCRMApiClient(
+            $client['clientId'],
+            $client['clientSecret'],
+            $client['redirectUri']
+        );
     }
 
     /**
@@ -145,7 +150,7 @@ class ApiService
         $capsule = (new DatabaseConfiguration())->getConnection();
         Account::updateOrCreate(
             ['account_name' => $_SESSION['name'],],
-            ['access_token' => json_encode($token, JSON_PRETTY_PRINT)]
+            ['access_token' => json_encode($token),]
         );
 //        $tokens = file_exists(self::TOKENS_FILE)
 //            ? json_decode(file_get_contents(self::TOKENS_FILE), true)
@@ -158,14 +163,18 @@ class ApiService
      * Получение токена из файла по имени.
      *
      * @param string $accountName
-     * @throws ModelNotFoundException
      * @return AccessToken
+     * @throws ModelNotFoundException
      */
     public function readToken(string $accountName): ?AccessToken
     {
         $capsule = (new DatabaseConfiguration())->getConnection();
         return new AccessToken(
-            json_decode(Account::where('account_name', '=', $accountName)->firstOrFail()->access_token, true)
+            json_decode(Account::where(
+                'account_name',
+                '=',
+                $accountName
+            )->firstOrFail()->access_token, true)
         );
 //        return new AccessToken(
 //            json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName]
@@ -226,6 +235,28 @@ class ApiService
             }
         } catch (BaseSyncExceptions $ex) {
             die($ex->getMessage());
+        }
+    }
+
+    public function saveWidgetData(array $widgetData): int
+    {
+        if (!(isset($widgetData['Uname']) && isset($widgetData['token']))) {
+            return 400;
+        }
+        try {
+            try {
+                (new DatabaseConfiguration())->getConnection();
+                $account = Account::where('account_name', '=', $widgetData['Uname'])->firstOrFail();
+                file_put_contents('./test.txt', $account);
+                $id = UnisenderToken::firstOrCreate(['token' => $widgetData['token']])->id;
+                $account->unisender_token_id = $id;
+                $account->save();
+                return 200;
+            } catch (ModelNotFoundException $ex) {
+                throw new DBModelNotFoundException($ex);
+            }
+        } catch (BaseSyncExceptions $ex) {
+            return 401;
         }
     }
 }
