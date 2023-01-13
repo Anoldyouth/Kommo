@@ -238,6 +238,15 @@ class ApiService
         }
     }
 
+    /**
+     * Обработка данных, полученных от виджета
+     * Если пользователь в таблице accounts существует,
+     * то будет добавлена запись в unisender_tokens и
+     * обновлена строка в accounts.
+     *
+     * @param array $widgetData
+     * @return int
+     */
     public function saveWidgetData(array $widgetData): int
     {
         if (!(isset($widgetData['Uname']) && isset($widgetData['token']))) {
