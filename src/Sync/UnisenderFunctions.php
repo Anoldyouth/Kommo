@@ -64,63 +64,6 @@ class UnisenderFunctions
     }
 
     /**
-     * Метод, используемый для ручной синхронизации.
-     * При необходимости, создает новый лист в аккаунте Unisender,
-     * а затем копирует все контакты из Kommo в Unisender.
-     *
-     * @param string $accountName
-     * @return array
-     */
-    public function manualSync(string $accountName): array
-    {
-        // Получение контактов AmoCRM
-        $contacts = (new ApiService())->getUserContacts($accountName);
-        $unisenderApi = new UnisenderApi($this->token);
-
-        $emailListIds = $this->getList($accountName, $unisenderApi);
-
-        // Создаем посылку для Unisender
-        $fieldNames = ['email', 'Name', 'email_list_ids'];
-        $data = [];
-        // TODO: группировать отправки по 500 контактов
-        foreach ($contacts as $contact) {
-            if (isset($contact['emails'])) {
-                foreach ($contact['emails'] as $email) {
-                    $data[] = [$email, $contact['name'], $emailListIds];
-                }
-            }
-        }
-        $result = $this->checkingAnswer(json_decode(
-            $unisenderApi->importContacts([
-            'field_names' => $fieldNames,
-            'data' => $data,
-            ]),
-            true
-        ))['result'];
-
-        // Обработка предупреждений от Unisender
-        $logs = $result['log'];
-        $result['log'] = [];
-        $logWarnings = [
-            'accountName' => $accountName,
-        ];
-        foreach ($logs as $log) {
-            $result['log'][] = [
-                'email' => $data[$log['index']][0],
-                'message' => $log['message'],
-            ];
-            unset($data[$log['index']]);
-        }
-        $logWarnings['logs'] = $result['log'];
-        (new Logger())
-            ->setLevel('other')
-            ->setDirectoryPermissions(0775)
-            ->warning($logWarnings);
-
-        return $result;
-    }
-
-    /**
      * Проверка ответа Unisender на сообщение об ошибке.
      *
      * @param array $answer
