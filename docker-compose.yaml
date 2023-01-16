@@ -1,6 +1,5 @@
 version: '3.5'
 
-# приближенный к продакшену конфиг
 services:
   # PHP fpm
   application-backend:
@@ -8,8 +7,8 @@ services:
     restart: always
     tty: true
     working_dir: /var/www/application
-    env_file:
-      - .env
+    #env_file:
+    #    - .env
     volumes:
       - .:/var/www/application
     container_name: application-backend
@@ -47,6 +46,13 @@ services:
     volumes:
       - applicationMysqlData:/var/lib/mysql
       - applicationMysqlFiles:/var/lib/mysql-files
+
+  # Queue Service
+  application-beanstalkd:
+    image: schickling/beanstalkd:latest
+    container_name: application-beanstalkd
+    ports:
+      - "11300:11300"
 
 #Docker Volumes
 volumes:

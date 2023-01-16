@@ -12,6 +12,6 @@ class TestHandlerFactory
 {
     public function __invoke(ContainerInterface $container): RequestHandlerInterface
     {
-        return new TestHandler();
+        return new TestHandler($container);
     }
 }

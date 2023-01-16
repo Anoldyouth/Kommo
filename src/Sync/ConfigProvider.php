@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sync;
 
+use Sync\Commands\NowTime;
+use Sync\Commands\TimeWorkerConstruct;
 use Sync\Factories\ApiHandlerFactory;
 use Sync\Factories\ContactHandlerFactory;
 use Sync\Factories\ContactsHandlerFactory;
@@ -26,6 +28,7 @@ class ConfigProvider
     public function __invoke(): array
     {
         return [
+            'laminas-cli' => $this->getCliConfig(),
             'dependencies' => $this->getDependencies(),
         ];
     }
@@ -44,6 +47,16 @@ class ConfigProvider
                 SyncHandler::class => SyncHandlerFactory::class,
                 WidgetHandler::class => WidgetHandlerFactory::class,
                 WebhookHandler::class => WebhookHandlerFactory::class,
+            ],
+        ];
+    }
+
+    public function getCliConfig(): array
+    {
+        return [
+            'commands' => [
+                'Sync:now-time' => NowTime::class,
+                'Sync:time-worker' => TimeWorkerConstruct::class,
             ],
         ];
     }
