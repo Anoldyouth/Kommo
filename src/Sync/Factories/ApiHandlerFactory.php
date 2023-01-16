@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sync\Factories;
 
 use Sync\Handlers\ApiHandler;
-use Sync\Handlers\TestHandler;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 

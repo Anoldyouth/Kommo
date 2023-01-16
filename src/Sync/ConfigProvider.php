@@ -10,6 +10,7 @@ use Sync\Factories\ContactsHandlerFactory;
 use Sync\Factories\SumHandlerFactory;
 use Sync\Factories\SyncHandlerFactory;
 use Sync\Factories\TestHandlerFactory;
+use Sync\Factories\WebhookHandlerFactory;
 use Sync\Factories\WidgetHandlerFactory;
 use Sync\Handlers\ApiHandler;
 use Sync\Handlers\ContactHandler;
@@ -17,6 +18,7 @@ use Sync\Handlers\ContactsHandler;
 use Sync\Handlers\SumHandler;
 use Sync\Handlers\SyncHandler;
 use Sync\Handlers\TestHandler;
+use Sync\Handlers\WebhookHandler;
 use Sync\Handlers\WidgetHandler;
 
 class ConfigProvider
@@ -41,6 +43,7 @@ class ConfigProvider
                 ContactHandler::class => ContactHandlerFactory::class,
                 SyncHandler::class => SyncHandlerFactory::class,
                 WidgetHandler::class => WidgetHandlerFactory::class,
+                WebhookHandler::class => WebhookHandlerFactory::class,
             ],
         ];
     }

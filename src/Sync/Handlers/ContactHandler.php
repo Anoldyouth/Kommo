@@ -15,7 +15,8 @@ class ContactHandler implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         if (!empty($request->getQueryParams()['email'])) {
-            $text = (new UnisenderFunctions())->getContact($request->getQueryParams()['email']);
+            $text = (new UnisenderFunctions(include './config/UnisenderConfig.php'))
+                ->getContact($request->getQueryParams()['email']);
             return new JsonResponse([
                 'status' => 'ok',
                 'text' => $text,

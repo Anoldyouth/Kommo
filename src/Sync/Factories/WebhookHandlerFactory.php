@@ -6,12 +6,12 @@ namespace Sync\Factories;
 
 use Psr\Container\ContainerInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Sync\Handlers\SyncHandler;
+use Sync\Handlers\WebhookHandler;
 
-class SyncHandlerFactory
+class WebhookHandlerFactory
 {
     public function __invoke(ContainerInterface $container): RequestHandlerInterface
     {
-        return new SyncHandler();
+        return new WebhookHandler();
     }
 }
