@@ -2,6 +2,7 @@
 
 namespace Sync;
 
+use Exception;
 use Hopex\Simplog\Logger;
 use Sync\Exceptions\BaseSyncExceptions;
 use Sync\Exceptions\Unisender\AccessDeniedException;
@@ -15,11 +16,11 @@ use Unisender\ApiWrapper\UnisenderApi;
 class UnisenderFunctions
 {
     /** @var string ключ Unisender. */
-    private string $key;
+    private string $token;
 
-    public function __construct()
+    public function __construct(string $token)
     {
-        $this->key = include './config/UnisenderConfig.php';
+        $this->token = $token;
     }
 
     /**
@@ -30,8 +31,36 @@ class UnisenderFunctions
      */
     public function getContact(string $email): array
     {
-        $unisenderApi = new UnisenderApi($this->key);
+        $unisenderApi = new UnisenderApi($this->token);
         return $this->checkingAnswer(json_decode($unisenderApi->getContact(['email' => $email]), true))['result'];
+    }
+
+    /**
+     * Поиск листа в аккаунте Unisender.
+     * Если он не найден, создается новый.
+     *
+     * @param string $accountName
+     * @param UnisenderApi $unisenderApi
+     * @return int
+     */
+    private function getList(string $accountName, UnisenderApi $unisenderApi): int
+    {
+        // Проверка существования листа
+        $lists = $this->checkingAnswer(json_decode($unisenderApi->getLists(), true))['result'];
+        foreach ($lists as $list) {
+            if ($list['title'] == 'Контакты Kommo ' . $accountName) {
+                $emailListIds = $list['id'];
+                break;
+            }
+        }
+
+        //Если лист с таким именем не найден, то создаем новый
+        if (!isset($emailListIds)) {
+            $emailListIds = $this->checkingAnswer(
+                json_decode($unisenderApi->createList(['title' => 'Контакты Kommo ' . $accountName]), true)
+            )['result']['id'];
+        }
+        return $emailListIds;
     }
 
     /**
@@ -46,23 +75,9 @@ class UnisenderFunctions
     {
         // Получение контактов AmoCRM
         $contacts = (new ApiService())->getUserContacts($accountName);
-        $unisenderApi = new UnisenderApi($this->key);
+        $unisenderApi = new UnisenderApi($this->token);
 
-        // Проверка существования листа
-        $lists = $this->checkingAnswer(json_decode($unisenderApi->getLists(), true))['result'];
-        foreach ($lists as $list) {
-            if ($list['title'] == 'Контакты Kommo') {
-                $emailListIds = $list['id'];
-                break;
-            }
-        }
-
-        //Если лист с таким именем не найден, то создаем новый
-        if (!isset($emailListIds)) {
-            $emailListIds = $this->checkingAnswer(
-                json_decode($unisenderApi->createList(['title' => 'Контакты Kommo']), true)
-            )['result']['id'];
-        }
+        $emailListIds = $this->getList($accountName, $unisenderApi);
 
         // Создаем посылку для Unisender
         $fieldNames = ['email', 'Name', 'email_list_ids'];
@@ -94,6 +109,7 @@ class UnisenderFunctions
                 'email' => $data[$log['index']][0],
                 'message' => $log['message'],
             ];
+            unset($data[$log['index']]);
         }
         $logWarnings['logs'] = $result['log'];
         (new Logger())
@@ -119,9 +135,9 @@ class UnisenderFunctions
                         $answer['result'] = ['error' => 'Контакт не найден.'];
                         return $answer;
                     }
-                    throw new \Exception($answer['error']);
+                    throw new Exception($answer['error']);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 switch ($answer['code']) {
                     case 'invalid_api_key':
                         throw new InvalidUnisenderKeyException($e);
@@ -141,5 +157,95 @@ class UnisenderFunctions
             die($e->getMessage());
         }
         return $answer;
+    }
+
+    /**
+     * Обновление контакта в Unisender.
+     *
+     * @param string $accountName
+     * @param array $deleted
+     * @param array $added
+     * @return array
+     */
+    public function updateContact(string $accountName, array $deleted, array $added): array
+    {
+        $unisenderApi = new UnisenderApi($this->token);
+
+        $emailListIds = $this->getList($accountName, $unisenderApi);
+
+        // Создаем посылку для Unisender
+        $fieldNames = ['delete', 'email', 'Name', 'email_list_ids'];
+        $data = [];
+        // TODO: группировать отправки по 500 контактов
+        if (!empty($deleted)) {
+            foreach ($deleted['emails'] as $email) {
+                $data[] = [1, $email, $deleted['name'], $emailListIds];
+            }
+        }
+        if (!empty($added)) {
+            foreach ($added['emails'] as $email) {
+                $data[] = [0, $email, $added['name'], $emailListIds];
+            }
+        }
+        $result = $this->checkingAnswer(json_decode(
+            $unisenderApi->importContacts([
+                'field_names' => $fieldNames,
+                'data' => $data,
+            ]),
+            true
+        ))['result'];
+
+        // Обработка предупреждений от Unisender
+        $logs = $result['log'];
+        $result['log'] = [];
+        $logWarnings = [
+            'accountName' => $accountName,
+        ];
+        foreach ($logs as $log) {
+            $result['log'][] = [
+                'code' => $log['code'],
+                'email' => $data[$log['index']][0],
+                'message' => $log['message'],
+            ];
+            if ($log['code'] == 'e_address__e_syntax') {
+                $count = isset($deleted['emails']) ? count($deleted['emails']) : 0;
+                unset($added['emails'][$log['index'] - $count]);
+            }
+        }
+        $logWarnings['logs'] = $result['log'];
+        (new Logger())
+            ->setLevel('other')
+            ->setDirectoryPermissions(0775)
+            ->warning($logWarnings);
+
+        return [
+            'added' => $added,
+            'result' => $result,
+        ];
+    }
+
+
+    /**
+     * Добавление контакта в Unisender.
+     *
+     * @param string $accountName
+     * @param array $contact
+     * @return array
+     */
+    public function addContact(string $accountName, array $contact): array
+    {
+        return $this->updateContact($accountName, [], $contact);
+    }
+
+    /**
+     * Удаление контакта из Unisender.
+     *
+     * @param string $accountName
+     * @param array $contact
+     * @return void
+     */
+    public function deleteContact(string $accountName, array $contact): void
+    {
+        $this->updateContact($accountName, $contact, []);
     }
 }

@@ -8,6 +8,8 @@ use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Sync\ApiService;
+use Sync\DatabaseFunctions;
 use Sync\UnisenderFunctions;
 
 class SyncHandler implements RequestHandlerInterface
@@ -20,7 +22,8 @@ class SyncHandler implements RequestHandlerInterface
                 'text' => 'need name',
             ]);
         }
-        $text = (new UnisenderFunctions())->manualSync($request->getQueryParams()['name']);
+        $accountName = $request->getQueryParams()['name'];
+        $text = (new ApiService())->sync($accountName);
         return new JsonResponse([
             'status' => 'ok',
             'text' => $text,

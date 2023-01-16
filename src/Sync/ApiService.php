@@ -3,6 +3,7 @@
 namespace Sync;
 
 use AmoCRM\Client\AmoCRMApiClient;
+use AmoCRM\Collections\ContactsCollection;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
@@ -10,6 +11,7 @@ use AmoCRM\Exceptions\BadTypeException;
 use AmoCRM\Models\ContactModel;
 use AmoCRM\Models\CustomFieldsValues\CategoryCustomFieldValuesModel;
 use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
+use AmoCRM\Models\WebhookModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use League\OAuth2\Client\Token\AccessToken;
 use Exception;
@@ -43,6 +45,23 @@ class ApiService
             $client['clientSecret'],
             $client['redirectUri']
         );
+    }
+
+    /**
+     * Авторизация в AmoCRMApiClient
+     *
+     * @param string $name
+     * @return void
+     * @throws EmptyAmoCRMTokenException
+     */
+    private function authClient(string $name): void
+    {
+        $accessToken = $this->readToken($name);
+        if (empty($accessToken)) {
+            throw new EmptyAmoCRMTokenException(new \Exception());
+        }
+        $this->apiClient->setAccessToken($accessToken);
+        $this->apiClient->setAccountBaseDomain($accessToken->getValues()['base_domain']);
     }
 
     /**
@@ -147,7 +166,7 @@ class ApiService
      */
     private function saveToken(array $token): void
     {
-        $capsule = (new DatabaseConfiguration())->getConnection();
+        (new DatabaseFunctions())->getConnection();
         Account::updateOrCreate(
             ['account_name' => $_SESSION['name'],],
             ['access_token' => json_encode($token),]
@@ -168,13 +187,14 @@ class ApiService
      */
     public function readToken(string $accountName): ?AccessToken
     {
-        $capsule = (new DatabaseConfiguration())->getConnection();
+        (new DatabaseFunctions())->getConnection();
         return new AccessToken(
-            json_decode(Account::where(
-                'account_name',
-                '=',
-                $accountName
-            )->firstOrFail()->access_token, true)
+            json_decode(
+                Account::where('account_name', '=', $accountName)
+                    ->firstOrFail()
+                    ->access_token,
+                true
+            )
         );
 //        return new AccessToken(
 //            json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName]
@@ -190,14 +210,8 @@ class ApiService
     public function getUserContacts(string $accountName): array
     {
         try {
-            // Получаем токен с файла и закрепляем его
-            $accessToken = $this->readToken($accountName);
-            if (empty($accessToken)) {
-                throw new EmptyAmoCRMTokenException(new \Exception());
-            }
             try {
-                $this->apiClient->setAccessToken($accessToken);
-                $this->apiClient->setAccountBaseDomain($accessToken->getValues()['base_domain']);
+                $this->authClient($accountName);
                 $contacts = $this->apiClient->contacts()->get();
                 // Проходимся по контактам, собираем имена и рабочие почты
                 $result = [];
@@ -220,6 +234,7 @@ class ApiService
                             }
                         }
                         $result[] = [
+                            'id' => $contact->getId(),
                             'name' => $contact->getName(),
                             'emails' => empty($emails) ? null : $emails,
                         ];
@@ -254,18 +269,141 @@ class ApiService
         }
         try {
             try {
-                (new DatabaseConfiguration())->getConnection();
-                $account = Account::where('account_name', '=', $widgetData['Uname'])->firstOrFail();
-                file_put_contents('./test.txt', $account);
+                (new DatabaseFunctions())->getConnection();
+                $account = Account::where('account_name', $widgetData['Uname'])->firstOrFail();
                 $id = UnisenderToken::firstOrCreate(['token' => $widgetData['token']])->id;
                 $account->unisender_token_id = $id;
                 $account->save();
+                $this->authClient($widgetData['Uname']);
+                $webHookModel = (new WebhookModel())
+                    ->setSettings([
+                        'add_contact',
+                        'update_contact',
+                        'delete_contact',
+                    ])
+                    ->setDestination((include './config/Uri.config.php') . '/webhook');
+                $this->apiClient
+                    ->webhooks()
+                    ->subscribe($webHookModel);
+                $this->sync($widgetData['Uname']);
                 return 200;
             } catch (ModelNotFoundException $ex) {
                 throw new DBModelNotFoundException($ex);
+            } catch (AmoCRMMissedTokenException $ex) {
+                throw new InvalidAmoCRMTokenException($ex);
+            } catch (AmoCRMApiException $ex) {
+                throw new ApiException($ex);
+            } catch (\Throwable $ex) {
+                throw new BaseSyncExceptions($ex);
             }
         } catch (BaseSyncExceptions $ex) {
             return 401;
         }
+    }
+
+
+    /**
+     * Синхронизация всех контактов аккаунта с Unisender
+     *
+     * @param string $accountName
+     * @return array
+     */
+    public function sync(string $accountName): array
+    {
+        $contacts = $this->getUserContacts($accountName);
+        $result = [];
+        foreach ($contacts as $contact) {
+            if (isset($contact['emails'])) {
+                $result[] = [
+                    'contact id' => $contact['id'],
+                    'contact name' => $contact['name'],
+                    'contact emails' => $contact['emails'],
+                    'result' => (new DatabaseFunctions())->addContactForAccount(
+                        $contact,
+                        $accountName
+                    )
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Синхронизация добавление контакта.
+     *
+     * @param array $data
+     * @return int
+     */
+    public function addContact(array $data): int
+    {
+        if (isset($data['name']) && isset($data['custom_fields']) && isset($data['id'])) {
+            $emails = [];
+            foreach ($data['custom_fields'] as $custom_field) {
+                if ($custom_field['code'] == 'EMAIL') {
+                    foreach ($custom_field['values'] as $value) {
+                        if ($value['enum'] == 369354) {
+                            $emails[] = $value['value'];
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!empty($emails)) {
+                $contact = [
+                    'id' => $data['id'],
+                    'name' => $data['name'],
+                    'emails' => $emails,
+                ];
+                (new DatabaseFunctions())->addContact($contact);
+            }
+        }
+        return 200;
+    }
+
+    /**
+     * Синхронизация удаления контакта.
+     *
+     * @param array $data
+     * @return int
+     */
+    public function deleteContact(array $data): int
+    {
+        if (isset($data['id'])) {
+            (new DatabaseFunctions())->deleteContact($data['id']);
+        }
+        return 200;
+    }
+
+    /**
+     * Синхронизация обновления контакта.
+     *
+     * @param array $data
+     * @return int
+     */
+    public function updateContact(array $data): int
+    {
+        if (isset($data['name']) && isset($data['custom_fields']) && isset($data['id'])) {
+            $emails = [];
+            foreach ($data['custom_fields'] as $custom_field) {
+                if ($custom_field['code'] == 'EMAIL') {
+                    foreach ($custom_field['values'] as $value) {
+                        if ($value['enum'] == 369354) {
+                            $emails[] = $value['value'];
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!empty($emails)) {
+                $contact = [
+                    'id' => $data['id'],
+                    'name' => $data['name'],
+                    'emails' => $emails,
+                ];
+                (new DatabaseFunctions())->updateContact($contact);
+            }
+        }
+        return 200;
     }
 }

@@ -3,11 +3,11 @@
 use Phpmig\Adapter;
 use Pimple\Container;
 use Illuminate\Database\Capsule\Manager as Capsule;
-use Sync\DatabaseConfiguration;
+use Sync\DatabaseFunctions;
 
 $container = new Container();
 
-$container['config'] = (new DatabaseConfiguration())->getConfig();
+$container['config'] = (new DatabaseFunctions())->getConfig();
 
 $container['db'] = function ($c) {
     $capsule = new Capsule();
