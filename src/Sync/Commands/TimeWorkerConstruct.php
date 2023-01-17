@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Sync\config\BeanstalkConfig;
 use Sync\Workers\TimeWorker;
+use Throwable;
 
 class TimeWorkerConstruct extends Command
 {
@@ -19,7 +20,11 @@ class TimeWorkerConstruct extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        (new TimeWorker(new BeanstalkConfig()))->execute($input, $output);
+        try {
+            (new TimeWorker(new BeanstalkConfig()))->execute($input, $output);
+        } catch (Throwable $ex) {
+            $output->writeln('<error>Ошибка подключения к Beanstalk<error>');
+        }
         return 0;
     }
 }

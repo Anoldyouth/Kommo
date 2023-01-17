@@ -26,15 +26,22 @@ class TestHandler implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $job = (new BeanstalkConfig($this->container))->getConnection()
-            ->useTube('times')
-            ->put(json_encode(sprintf(
-                "Now time: %s",
-                Carbon::now(new DateTimeZone('Europe/Moscow'))->isoFormat('HH:mm (DD.YYYY)')
-            )));
+        $connection = (new BeanstalkConfig($this->container))->getConnection();
+        if (isset($connection)) {
+            $job = $connection
+                ->useTube('times')
+                ->put(json_encode(sprintf(
+                    "Now time: %s",
+                    Carbon::now(new DateTimeZone('Europe/Moscow'))->isoFormat('HH:mm (DD.YYYY)')
+                )));
+            return new JsonResponse([
+                'status' => 'ok',
+                'id' => $job->getId(),
+            ]);
+        }
         return new JsonResponse([
-            'status' => 'ok',
-            'id' => $job->getId(),
+            'status' => 'error',
+            'error text' => 'Ошибка подключения к Beanstalk',
         ]);
     }
 }
