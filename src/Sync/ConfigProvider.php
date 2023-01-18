@@ -6,6 +6,7 @@ namespace Sync;
 
 use Sync\Commands\NowTime;
 use Sync\Commands\TimeWorkerConstruct;
+use Sync\Commands\Update;
 use Sync\Factories\ApiHandlerFactory;
 use Sync\Factories\ContactHandlerFactory;
 use Sync\Factories\ContactsHandlerFactory;
@@ -57,6 +58,7 @@ class ConfigProvider
             'commands' => [
                 'Sync:now-time' => NowTime::class,
                 'Sync:time-worker' => TimeWorkerConstruct::class,
+                'Sync:update-tokens' => Update::class,
             ],
         ];
     }

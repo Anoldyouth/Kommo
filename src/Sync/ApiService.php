@@ -242,9 +242,13 @@ class ApiService
                 }
                 return $result;
             } catch (AmoCRMMissedTokenException $ex) {
-                throw new InvalidAmoCRMTokenException($ex);
+                new InvalidAmoCRMTokenException($ex);
+                header('Location: ' . (include './config/Uri.config.php') . '/auth?name=' . $accountName);
+                die;
             } catch (AmoCRMoAuthApiException $ex) {
-                throw new AuthApiException($ex);
+                new AuthApiException($ex);
+                header('Location: ' . (include './config/Uri.config.php') . '/auth?name=' . $accountName);
+                die;
             } catch (AmoCRMApiException $ex) {
                 throw new ApiException($ex);
             }
@@ -405,5 +409,19 @@ class ApiService
             }
         }
         return 200;
+    }
+
+    public function refreshToken(string $json_token): array
+    {
+        $token = new AccessToken(json_decode($json_token, true));
+        $this->apiClient->setAccessToken($token);
+        $this->apiClient->setAccountBaseDomain($token->getValues()['base_domain']);
+        $newAccessToken = $this->apiClient->getOAuthClient()->getAccessTokenByRefreshToken($token);
+        return [
+            'access_token' => $newAccessToken->getToken(),
+            'refresh_token' => $newAccessToken->getRefreshToken(),
+            'expires' => $newAccessToken->getExpires(),
+            'base_domain' => $this->apiClient->getAccountBaseDomain(),
+        ];
     }
 }

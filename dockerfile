@@ -20,4 +20,7 @@ USER $CONTAINER_USER_ID
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
+
+RUN crontab /var/www/application/update-tokens
+
 CMD ["php-fpm"]

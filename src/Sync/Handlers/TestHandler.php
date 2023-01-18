@@ -6,13 +6,17 @@ namespace Sync\Handlers;
 
 use Carbon\Carbon;
 use DateTimeZone;
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Laminas\Diactoros\Response\JsonResponse;
 use Pheanstalk\Pheanstalk;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Sync\ApiService;
 use Sync\config\BeanstalkConfig;
+use Sync\DatabaseFunctions;
+use Sync\Models\Account;
 
 class TestHandler implements RequestHandlerInterface
 {
