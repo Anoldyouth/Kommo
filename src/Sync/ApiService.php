@@ -3,7 +3,6 @@
 namespace Sync;
 
 use AmoCRM\Client\AmoCRMApiClient;
-use AmoCRM\Collections\ContactsCollection;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
@@ -15,6 +14,8 @@ use AmoCRM\Models\WebhookModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use League\OAuth2\Client\Token\AccessToken;
 use Exception;
+use Sync\AuthData\AuthData;
+use Sync\AuthData\Services\AuthDatabase;
 use Sync\Exceptions\AmoCRM\ApiException;
 use Sync\Exceptions\AmoCRM\AuthApiException;
 use Sync\Exceptions\AmoCRM\CreatingButtonException;
@@ -31,8 +32,8 @@ class ApiService
     /** @var string Базовый домен авторизации. */
     private const TARGET_DOMAIN = 'kommo.com';
 
-    /** @var string Файл хранения токенов. */
-    private const TOKENS_FILE = './tokens.json';
+    /** @var AuthData Сервис работы с токеном авторизации. */
+    private AuthData $authService;
 
     /** @var AmoCRMApiClient AmoCRM клиент. */
     private AmoCRMApiClient $apiClient;
@@ -45,6 +46,12 @@ class ApiService
             $client['clientSecret'],
             $client['redirectUri']
         );
+
+        /** Если требуется сохранять токен локально. */
+        //$this->authService = new AuthFile();
+
+        /** Если требуется сохранять токен в БД. */
+         $this->authService = new AuthDatabase();
     }
 
     /**
@@ -166,16 +173,7 @@ class ApiService
      */
     private function saveToken(array $token): void
     {
-        (new DatabaseFunctions())->getConnection();
-        Account::updateOrCreate(
-            ['account_name' => $_SESSION['name'],],
-            ['access_token' => json_encode($token),]
-        );
-//        $tokens = file_exists(self::TOKENS_FILE)
-//            ? json_decode(file_get_contents(self::TOKENS_FILE), true)
-//            : [];
-//        $tokens[$_SESSION['name']] = $token;
-//        file_put_contents(self::TOKENS_FILE, json_encode($tokens, JSON_PRETTY_PRINT));
+        $this->authService->saveAuth($token);
     }
 
     /**
@@ -187,18 +185,7 @@ class ApiService
      */
     public function readToken(string $accountName): ?AccessToken
     {
-        (new DatabaseFunctions())->getConnection();
-        return new AccessToken(
-            json_decode(
-                Account::where('account_name', '=', $accountName)
-                    ->firstOrFail()
-                    ->access_token,
-                true
-            )
-        );
-//        return new AccessToken(
-//            json_decode(file_get_contents(self::TOKENS_FILE), true)[$accountName]
-//        );
+        return $this->authService->getAuth($accountName);
     }
 
     /**
@@ -243,10 +230,12 @@ class ApiService
                 return $result;
             } catch (AmoCRMMissedTokenException $ex) {
                 new InvalidAmoCRMTokenException($ex);
+                (new DatabaseFunctions())->deleteToken($accountName);
                 header('Location: ' . (include './config/Uri.config.php') . '/auth?name=' . $accountName);
                 die;
             } catch (AmoCRMoAuthApiException $ex) {
                 new AuthApiException($ex);
+                (new DatabaseFunctions())->deleteToken($accountName);
                 header('Location: ' . (include './config/Uri.config.php') . '/auth?name=' . $accountName);
                 die;
             } catch (AmoCRMApiException $ex) {

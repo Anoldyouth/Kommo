@@ -206,4 +206,10 @@ class DatabaseFunctions
             }
         }
     }
+
+    public function deleteToken(string $accountName): void
+    {
+        $this->getConnection();
+        Account::where('account_name', $accountName)->update(['access_token' => null]);
+    }
 }

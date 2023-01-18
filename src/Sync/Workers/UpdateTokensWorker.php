@@ -18,11 +18,11 @@ class UpdateTokensWorker extends BaseWorker
 
     public function process($data, OutputInterface $output)
     {
-        (new DatabaseFunctions())->getConnection();
-//        $capsule = new Capsule();
-//        $capsule->addConnection((new DatabaseFunctions())->getConfig());
-//        $capsule->setAsGlobal();
-//        $capsule->bootEloquent();
+        //(new DatabaseFunctions())->getConnection();
+        $capsule = new Capsule();
+        $capsule->addConnection((new DatabaseFunctions())->getConfig());
+        $capsule->setAsGlobal();
+        $capsule->bootEloquent();
         $account = Account::where(
             'access_token->expires',
             '<',
