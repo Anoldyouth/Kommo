@@ -20,4 +20,13 @@ USER $CONTAINER_USER_ID
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
-CMD ["php-fpm"]
+
+RUN apk --update add --no-cache bash
+
+COPY update-tokens /var/spool/cron/crontabs/root
+
+COPY entrypoint.sh /usr/sbin
+
+RUN chmod a+x /usr/sbin/entrypoint.sh
+
+ENTRYPOINT ["/usr/sbin/entrypoint.sh"]
