@@ -1,2 +1,3 @@
 0	22	*	*	*	/var/www/application/vendor/bin/laminas Sync:update-tokens -t 24
+0	22	*	*	*	sh /var/www/application/updating-workers.bash &
 

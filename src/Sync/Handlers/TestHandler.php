@@ -32,9 +32,11 @@ class TestHandler implements RequestHandlerInterface
     {
         $connection = (new BeanstalkConfig($this->container))->getConnection();
         if (isset($connection)) {
+            return new JsonResponse([
+                'status' => $connection->statsTube('update'),
+            ]);
             $job = $connection
                 ->useTube('times')
-
                 ->put(json_encode(sprintf(
                     "Now time: %s",
                     Carbon::now(new DateTimeZone('Europe/Moscow'))->isoFormat('HH:mm (DD.YYYY)')

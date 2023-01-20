@@ -25,8 +25,8 @@ RUN apk --update add --no-cache bash
 
 COPY update-tokens /var/spool/cron/crontabs/root
 
-COPY entrypoint.bash /usr/sbin
+COPY entrypoint.sh /usr/sbin
 
-RUN chmod a+x /usr/sbin/entrypoint.bash
+RUN chmod a+x /usr/sbin/entrypoint.sh
 
-ENTRYPOINT /usr/sbin/entrypoint.bash
+ENTRYPOINT ["/usr/sbin/entrypoint.sh"]

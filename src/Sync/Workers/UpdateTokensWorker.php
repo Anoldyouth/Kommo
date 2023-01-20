@@ -5,6 +5,7 @@ namespace Sync\Workers;
 use AmoCRM\OAuth2\Client\Provider\AmoCRM;
 use Illuminate\Support\Carbon;
 use League\OAuth2\Client\Token\AccessToken;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Sync\ApiService;
 use Sync\DatabaseFunctions;
@@ -16,13 +17,16 @@ class UpdateTokensWorker extends BaseWorker
     /** @var string Просматриваемая очередь. */
     protected string $queue = 'update';
 
+    /**
+     * Обновление токенов
+     *
+     * @param $data
+     * @param OutputInterface $output
+     * @return mixed|void
+     */
     public function process($data, OutputInterface $output)
     {
-        //(new DatabaseFunctions())->getConnection();
-        $capsule = new Capsule();
-        $capsule->addConnection((new DatabaseFunctions())->getConfig());
-        $capsule->setAsGlobal();
-        $capsule->bootEloquent();
+        (new DatabaseFunctions())->getConnection();
         $account = Account::where(
             'access_token->expires',
             '<',
