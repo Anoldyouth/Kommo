@@ -40,8 +40,7 @@ abstract class BaseWorker extends Command
     public function execute(InputInterface $input, OutputInterface $output)
     {
         /** @var Job $job */
-        while (
-            $job = $this->connection
+        while ($job = $this->connection
             ->watchOnly($this->queue)
             ->ignore(PheanstalkInterface::DEFAULT_TUBE)
             ->reserve()

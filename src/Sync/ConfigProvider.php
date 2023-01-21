@@ -6,15 +6,12 @@ namespace Sync;
 
 use Sync\CommandFactories\SetUpdateJobFactory;
 use Sync\CommandFactories\StartUpdateTokensWorkerFactory;
+use Sync\CommandFactories\TimeWorkerFactory;
 use Sync\Commands\AddWorkerToDB;
 use Sync\Commands\ClearWorkers;
 use Sync\Commands\DeleteWorkerFromDB;
 use Sync\Commands\NowTime;
-use Sync\Commands\TestCommand;
-use Sync\Commands\TestCommandFactory;
-use Sync\Commands\TimeWorkerConstruct;
 use Sync\Commands\SetUpdateJob;
-use Sync\Commands\UpdateWorkerConstruct;
 use Sync\Factories\ApiHandlerFactory;
 use Sync\Factories\ContactHandlerFactory;
 use Sync\Factories\ContactsHandlerFactory;
@@ -31,6 +28,7 @@ use Sync\Handlers\SyncHandler;
 use Sync\Handlers\TestHandler;
 use Sync\Handlers\WebhookHandler;
 use Sync\Handlers\WidgetHandler;
+use Sync\Workers\TimeWorker;
 use Sync\Workers\UpdateTokensWorker;
 
 class ConfigProvider
@@ -59,6 +57,7 @@ class ConfigProvider
                 WebhookHandler::class => WebhookHandlerFactory::class,
                 UpdateTokensWorker::class => StartUpdateTokensWorkerFactory::class,
                 SetUpdateJob::class => SetUpdateJobFactory::class,
+                TimeWorker::class => TimeWorkerFactory::class,
             ],
         ];
     }
@@ -68,7 +67,7 @@ class ConfigProvider
         return [
             'commands' => [
                 'Sync:now-time' => NowTime::class,
-                'Sync:time-worker' => TimeWorkerConstruct::class,
+                'Sync:time-worker' => TimeWorker::class,
                 'Sync:update-tokens' => SetUpdateJob::class,
                 'Sync:add-worker' => AddWorkerToDB::class,
                 'Sync:delete-worker' => DeleteWorkerFromDB::class,

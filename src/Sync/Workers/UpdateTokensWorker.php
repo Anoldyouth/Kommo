@@ -22,7 +22,7 @@ class UpdateTokensWorker extends BaseWorker
      *
      * @param $data
      * @param OutputInterface $output
-     * @return mixed|void
+     * @return void
      */
     public function process($data, OutputInterface $output)
     {
