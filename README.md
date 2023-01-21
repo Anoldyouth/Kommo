@@ -1,172 +1,123 @@
-# Mezzio Skeleton and Installer
+## Задача проекта
 
-[![Build Status](https://github.com/mezzio/mezzio-skeleton/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/mezzio/mezzio-skeleton/actions/workflows/continuous-integration.yml)
+Необходимо было создать проект, синхронизирующий аккаунты AmoCRM и Unisender.
 
-*Begin developing PSR-15 middleware applications in seconds!*
+## Стек проекта
 
-[mezzio](https://github.com/mezzio/mezzio) builds on
-[laminas-stratigility](https://github.com/laminas/laminas-stratigility) to
-provide a minimalist PSR-15 middleware framework for PHP with routing, DI
-container, optional templating, and optional error handling capabilities.
+- PHP 7.4
+- Фреймворк Mezzio
+- Docker
+- MySQL
+- Beanstalk
 
-This installer will setup a skeleton application based on mezzio by
-choosing optional packages based on user input as demonstrated in the following
-screenshot:
+## Запуск проекта
 
-![screenshot-installer](https://user-images.githubusercontent.com/1011217/90332191-55d32200-dfbb-11ea-80c0-27a07ef5691a.png)
+После скачивания проекта необходимо сделать следующие вещи:
 
-The user selected packages are saved into `composer.json` so that everyone else
-working on the project have the same packages installed. Configuration files and
-templates are prepared for first use. The installer command is removed from
-`composer.json` after setup succeeded, and all installer related files are
-removed.
-
-## Getting Started
-
-Start your new Mezzio project with composer:
+1) Установка необходимых библиотек:
 
 ```bash
-$ composer create-project mezzio/mezzio-skeleton <project-path>
+   $ composer install
 ```
 
-After choosing and installing the packages you want, go to the
-`<project-path>` and start PHP's built-in web server to verify installation:
+2) Создаем .env для подключения к БД:
+
+```dotenv
+MYSQL_USER=<user>
+MYSQL_PASSWORD=<password>
+MYSQL_HOST=application-mysql
+MIG_MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_DATABASE=<databse>
+```
+
+3) Создать образ application-backend:
 
 ```bash
-$ composer run --timeout=0 serve
+$ docker build -t application-backend .
 ```
 
-You can then browse to http://localhost:8080.
-
-> ### Linux users
->
-> On PHP versions prior to 7.1.14 and 7.2.2, this command might not work as
-> expected due to a bug in PHP that only affects linux environments. In such
-> scenarios, you will need to start the [built-in web
-> server](http://php.net/manual/en/features.commandline.webserver.php) yourself,
-> using the following command:
->
-> ```bash
-> $ php -S 0.0.0.0:8080 -t public/ public/index.php
-> ```
-
-> ### Setting a timeout
->
-> Composer commands time out after 300 seconds (5 minutes). On Linux-based
-> systems, the `php -S` command that `composer serve` spawns continues running
-> as a background process, but on other systems halts when the timeout occurs.
->
-> As such, we recommend running the `serve` script using a timeout. This can
-> be done by using `composer run` to execute the `serve` script, with a
-> `--timeout` option. When set to `0`, as in the previous example, no timeout
-> will be used, and it will run until you cancel the process (usually via
-> `Ctrl-C`). Alternately, you can specify a finite timeout; as an example,
-> the following will extend the timeout to a full day:
->
-> ```bash
-> $ composer run --timeout=86400 serve
-> ```
-
-## Installing alternative packages
-
-There is a feature to install alternative packages: Instead of entering one of
-the selection **you can actually type the package name and version**.
-
-> ```
->   Which template engine do you want to use?
->   [1] Plates
->   [2] Twig
->   [3] zend-view installs zend-servicemanager
->   [n] None of the above
->   Make your selection or type a composer package name and version (n): infw/pug:0.1
->   - Searching for infw/pug:0.1
->   - Adding package infw/pug (0.1)
-> ```
-
-That feature allows you to install any alternative package you want. It has its limitations though:
-
-* The alternative package must follow this format `namespace/package:1.0`. It needs the correct version.
-* Templates are not copied, but the ConfigProvider can be configured in such way that it uses the
-  default templates directly from the package itself.
-* This doesn't work for containers as the container.php file needs to be copied.
-
-## Troubleshooting
-
-If the installer fails during the ``composer create-project`` phase, please go
-through the following list before opening a new issue. Most issues we have seen
-so far can be solved by `self-update` and `clear-cache`.
-
-1. Be sure to work with the latest version of composer by running `composer self-update`.
-2. Try clearing Composer's cache by running `composer clear-cache`.
-
-If neither of the above help, you might face more serious issues:
-
-- Info about the [zlib_decode error](https://github.com/composer/composer/issues/4121).
-- Info and solutions for [composer degraded mode](https://getcomposer.org/doc/articles/troubleshooting.md#degraded-mode).
-
-## Application Development Mode Tool
-
-This skeleton comes with [laminas-development-mode](https://github.com/laminas/laminas-development-mode).
-It provides a composer script to allow you to enable and disable development mode.
-
-### To enable development mode
-
-**Note:** Do NOT run development mode on your production server!
+4) Запустить проект:
 
 ```bash
-$ composer development-enable
+$ docker compose up
 ```
 
-**Note:** Enabling development mode will also clear your configuration cache, to
-allow safely updating dependencies and ensuring any new configuration is picked
-up by your application.
+## Настройка подключения к виджету AmoCRM
 
-### To disable development mode
+Для того, чтобы проект мог синхронизировать данные, необходимо:
 
+1) Создать свою интеграцию в аккаунте AmoCRM. Заполнить поля следующим образом:
+   - Путь переадресации: `<адрес сервера>/auth`
+   - Доступ: доступ к данным аккаунта
+   - Загрузить виджет с измененным полем `var tokenURL` на путь 
+`<адрес сервера>/widget` в файле `script.js`
+
+2) После создания интеграции добавляем данные об интеграции в `/config/ApiClientConfig.php`
+
+3) Добавить адрес сервера `/config/Uri.config.php`
+
+## Возможности проекта
+### Путь `/auth?name=<Имя пользователя>`
+
+Позволяет авторизоваться за пользователя с именем name. После разрешения доступа
+к данным появится сообщение об авторизации, а в БД появится запись о нем.
+
+### Путь `/contacts?name=<Имя пользователя>`
+
+Позволяет вывести все контакты пользователя.
+
+### Путь `/widget`
+
+Сюда приходит запрос от AmoCRM для подключения виджета к аккаунту. Здесь
+добавляется токен Unisender для авторизованного пользователя и подключаются 
+вебхукию
+
+### Путь `/webhook`
+
+Сюда приходят вебхуки от AmoCRM при добавлении, изменении и удалении контактов.
+
+### Путь `/contact?email=<email>`
+
+Получение данных об контакте, записанном в Unisender.
+
+### Путь `/sync?name=<Имя пользователя>`
+
+Позволяет вручную синхронизировать контакты с Unisender.
+
+## Автообновление токенов авторизации
+
+Для того, чтобы токены авторизации AmoCRM всегда были действительными, при запуске
+docker в cron добавляется запись на ежедневное обновление токенов.
+
+Также в cron добавлена запись на ежедневный запуск скрипта, выполняющий запуск работы
+воркера - обработчиков задач на обновление токенов.
+
+### Команды для командной строки
+Все команды запускаются из командной строки контейнера application-backend
+1) Команда добавления задачи на обновление данных, которые истекают через
+заданное время (по умолчанию 24 часа):
 ```bash
-$ composer development-disable
+$ /var/www/application/vendor/bin/laminas Sync:update-tokens -t <время>
 ```
-
-### Development mode status
-
+2) Добавление воркера в БД:
 ```bash
-$ composer development-status
+$ /var/www/application/vendor/bin/laminas Sync:add-worker -t <тип> -w <имя> -m <максимальное количество>
 ```
-
-## Configuration caching
-
-By default, the skeleton will create a configuration cache in
-`data/config-cache.php`. When in development mode, the configuration cache is
-disabled, and switching in and out of development mode will remove the
-configuration cache.
-
-You may need to clear the configuration cache in production when deploying if
-you deploy to the same directory. You may do so using the following:
-
+3) Удаление воркера из БД
 ```bash
-$ composer clear-config-cache
+$ /var/www/application/vendor/bin/laminas Sync:delete-worker -t <тип> -w <имя>
 ```
-
-You may also change the location of the configuration cache itself by editing
-the `config/config.php` file and changing the `config_cache_path` entry of the
-local `$cacheConfig` variable.
-
-## Skeleton Development
-
-This section applies only if you cloned this repo with `git clone`, not when you
-installed mezzio with `composer create-project ...`.
-
-If you want to run tests against the installer, you need to clone this repo and
-setup all dependencies with composer.  Make sure you **prevent composer running
-scripts** with `--no-scripts`, otherwise it will remove the installer and all
-tests.
-
+4) Запуск воркера на отслеживание задач:
 ```bash
-$ composer update --no-scripts
-$ composer test
+$ /var/www/application/vendor/bin/laminas Sync:start-update-tokens-worker
+```
+5) Удаление всех записей о воркерах в БД:
+```bash
+$ /var/www/application/vendor/bin/laminas Sync:clear-workers -t <тип>
 ```
 
-Please note that the installer tests remove installed config files and templates
-before and after running the tests.
-
-Before contributing read [the contributing guide](https://github.com/mezzio/.github/blob/master/CONTRIBUTING.md).
+## Настройка запуска воркеров
+В файле `update-tokens` задается таблица для обновления токенов. Там же
+запускается скрипт `updating-workers.bash`, отвечающий за работу воркера 
+и отслеживающий его состояние в БД.
