@@ -46,8 +46,7 @@ class DeleteWorkerFromDB extends Command
     ): int {
         $type = $input->getOption('type');
         $name = $input->getOption('worker');
-        (new DatabaseFunctions())->getConnection();
-        Worker::where('type', $type)->where('name', $name)->delete();
+        (new DatabaseFunctions())->deleteWorker($type, $name);
         return 0;
     }
 }

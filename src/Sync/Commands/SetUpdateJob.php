@@ -74,4 +74,3 @@ class SetUpdateJob extends Command
         return 0;
     }
 }
-

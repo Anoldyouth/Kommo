@@ -38,8 +38,7 @@ class ClearWorkers extends Command
         OutputInterface $output
     ): int {
         $type = $input->getOption('type');
-        (new DatabaseFunctions())->getConnection();
-        Worker::where('type', $type)->delete();
+        (new DatabaseFunctions())->clearWorkers($type);
         return 0;
     }
 }

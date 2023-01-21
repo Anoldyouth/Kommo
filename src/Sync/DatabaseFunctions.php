@@ -7,6 +7,7 @@ use Sync\Exceptions\BaseSyncExceptions;
 use Sync\Models\Account;
 use Sync\Models\Contact;
 use Sync\Models\UnisenderToken;
+use Sync\Models\Worker;
 
 /**
  * Класс для работы с соединениями к базе данных.
@@ -211,5 +212,31 @@ class DatabaseFunctions
     {
         $this->getConnection();
         Account::where('account_name', $accountName)->update(['access_token' => null]);
+    }
+
+    public function addWorker(string $type, string $workerName, int $maxCount): int
+    {
+        $this->getConnection();
+        if (Worker::where('type', $type)->count() >= $maxCount) {
+            return -1;
+        }
+
+        Worker::updateOrCreate([
+            'type' => $type,
+            'name' => $workerName,
+        ]);
+        return 0;
+    }
+
+    public function deleteWorker(string $type, string $workerName): void
+    {
+        $this->getConnection();
+        Worker::where('type', $type)->where('name', $workerName)->delete();
+    }
+
+    public function clearWorkers(string $type): void
+    {
+        $this->getConnection();
+        Worker::where('type', $type)->delete();
     }
 }

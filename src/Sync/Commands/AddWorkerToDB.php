@@ -54,15 +54,7 @@ class AddWorkerToDB extends Command
     ): int {
         $maxCount = $input->getOption('max');
         $type = $input->getOption('type');
-        (new DatabaseFunctions())->getConnection();
-        if (Worker::where('type', $type)->count() >= $maxCount) {
-            return -1;
-        }
         $name = $input->getOption('worker');
-        Worker::updateOrCreate([
-            'type' => $type,
-            'name' => $name,
-        ]);
-        return 0;
+        return (new DatabaseFunctions())->addWorker($type, $name, $maxCount);
     }
 }

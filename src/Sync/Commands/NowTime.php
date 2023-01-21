@@ -10,10 +10,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class NowTime extends Command
 {
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln(sprintf("Now time: %s", Carbon::now()->isoFormat('HH:mm (DD.YYYY)')));
-
         return 0;
     }
 }
